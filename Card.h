@@ -14,7 +14,7 @@ public:
 
     Card(){
         random_device rd;
-        uniform_int_distribution<> distr(0, 14);
+        uniform_int_distribution<> distr(2, 14);
         mt19937 gen(rd());
         uniform_int_distribution<> distra(0, 3);
         this->value = distr(gen);

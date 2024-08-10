@@ -8,28 +8,33 @@
 #include "Card.h"
 #include <set>
 #include <iostream>
+#include <map>
+
 using namespace std;
 class StrengthEvaluator{
 public:
-    pair<bool, set<int>> pair;
-    std::pair<bool, set<int>> threeOfAKind;
+    int highCard;
+    pair<bool, vector<int>> pair;
+    std::pair<bool, vector<int>> threeOfAKind;
     std::pair<bool, vector<int>> straight;
-    bool flush = false;
-    bool fullHouse = false;
-    bool fourOfAKind = false;
-    bool straightFlush = false;
+    std::pair<bool, int> flush;
+    std::pair<bool, int> fullHouse;
+    std::pair<bool, int> fourOfAKind;
+    std::pair<bool, int> straightFlush;
     bool royalFlush = false;
 
     StrengthEvaluator(){
 
     }
-
+    void EvaluateHighCard(vector<Card> cards){
+        highCard = cards[cards.size() - 1].value;
+    }
     void EvaluatePair(vector<Card> cards){
         for(int i = 0; i < cards.size(); i++){
             for(int j = 0; j < cards.size(); j++){
                 if(cards[i].value == cards[j].value && i != j){
                     pair.first = true;
-                    pair.second.insert(cards[i].value);
+                    pair.second.push_back(cards[i].value);
                 }
             }
         }
@@ -41,7 +46,7 @@ public:
                 for(int k = 0; k < cards.size(); k++){
                     if(cards[i].value == cards[j].value && cards[j].value == cards[k].value && i != j && j != k && i != k){
                         threeOfAKind.first = true;
-                        threeOfAKind.second.insert(cards[i].value);
+                        threeOfAKind.second.push_back(cards[i].value);
                     }
                 }
             }
@@ -74,94 +79,101 @@ public:
     }
 
     void EvaluateFullHouse(vector<Card> cards){
-        if(pair.first && threeOfAKind.first)
-            if(pair.second != threeOfAKind.second)
-                fullHouse = true;
+        int highest = 0;
 
-        fullHouse = false;
+        if(pair.first && threeOfAKind.first)
+            if(pair.second != threeOfAKind.second) {
+                fullHouse.first = true;
+                for(auto i : threeOfAKind.second)
+                    if(i > highest) highest = i;
+                for(auto i : pair.second)
+                    if(i > highest) highest = i;
+            }
+
+        fullHouse.first = false;
     }
 
     void EvaluateFlush(vector<Card> cards){
         int counter = 0;
-        for(int i = 0; i < cards.size(); i++){
+        for(int i = 0; i < cards.size(); i++)
             if(cards[i].suite == cards[i + 1].suite)
                 counter++;
-        }
-        flush = counter >= 5;
+
+        flush.first = counter >= 5;
+        flush.second = highCard;
     }
 
-    void EvaluateFourOfAKind(vector<Card> cards){
+    void EvaluateFourOfAKind(vector<Card> cards){ // REFACTOR (CARDS ARE IN ORDER)
+        int targetSuite;
+        int highestCard = 0;
         for(int i = 0; i < cards.size(); i++){
             for(int j = 0; j < cards.size(); j++){
                 for(int k = 0; k < cards.size(); k++){
                     for(int l = 0; l < cards.size(); l++){
                         if(cards[i].value == cards[j].value && cards[j].value == cards[k].value && cards[k].value == cards[l].value && i != j && j != k && i != k && i != l && j != l && k != l){
-                            fourOfAKind = true;
+                            fourOfAKind.first = true;
+                            targetSuite = cards[i].suite;
+
+                            for(auto i : cards)
+                                if(i.suite == targetSuite)
+                                    if(i.value > highestCard)
+                                        highestCard = i.value;
+                            fourOfAKind.second = highestCard;
                         }
                     }
                 }
             }
         }
+
     }
 
     void EvaluateStraightFlush(vector<Card> cards){
+        int highestCard = 0;
+        map<int, int> suitMapper = {{0,0},{1,0},{2,0},{3,0}};
+        int targetSuite;
         if(straight.first){
-            int counter = 0;
-            for(int i = 0; i < cards.size(); i++){
-                if(cards[i].suite == cards[i + 1].suite)
-                    counter++;
+            for(auto i : cards){
+                suitMapper[i.suite] += 1;
             }
-            straightFlush = counter >= 5;
+            for(auto i : suitMapper)
+                if(i.second >= 5) {
+                    targetSuite = i.first;
+                    straightFlush.first = true;
+                }
+            for(auto i : cards){
+                if(i.suite == targetSuite)
+                    if(i.value > highestCard)
+                        highestCard = i.value;
+            }
+            straightFlush.second = highestCard;
         }
     }
 
     void EvaluateRoyalFlush(vector<Card> cards){
-        if(straightFlush){
+        if(straightFlush.first){
             if(straight.second[straight.second.size() - 1] == 14)
                 royalFlush = true;
         }
     }
 
-    void PrintHands(int id){
-        cout << "Player: " << id << endl;
-
-        if(pair.first) {
-            cout << "Pairs: ";
-            for(auto i : pair.second)
-                cout << i << ", ";
-            cout << endl;
-        }
-
-        if(threeOfAKind.first){
-            cout << "Tuples: ";
-            for(auto i : threeOfAKind.second)
-                cout << i << ", ";
-            cout << endl;
-        }
-
-        if(straight.first)
-            cout << "Straight" << endl;
-
-        if(flush)
-            cout << "Flush" << endl;
-
-        if(fullHouse)
-            cout << "Full House" << endl;
-
-        if(fourOfAKind)
-            cout << "Four of a Kind" << endl;
-
-        if(straightFlush)
-            cout << "Straight Flush" << endl;
-
+    int GetHandStrength(){                                      //MIN - MAX
         if(royalFlush)
-            cout << "Royal Flush" << endl;
-
-        cout << endl << endl;
+            return highCard + 14 * 8;
+        else if(straightFlush.first)
+            return straightFlush.second + 14 * 7;
+        else if (fourOfAKind.first)
+            return fourOfAKind.second + 14 * 6;
+        else if (fullHouse.first)
+            return fullHouse.second + 14 * 5;
+        else if(flush.first)
+            return flush.second + 14 * 4;
+        else if (straight.first)
+            return Utils::GetHighest(straight.second) + 14 * 3;
+        else if(threeOfAKind.first)
+            return Utils::GetHighest(threeOfAKind.second) + 14 * 2;
+        else if(pair.first)
+            return Utils::GetHighest(pair.second) + 14;
+        else return highCard;
     }
-
-
-
-
 };
 #endif //POKERAI_STRENGTHEVALUATOR_H

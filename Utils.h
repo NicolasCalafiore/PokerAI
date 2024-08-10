@@ -29,5 +29,12 @@ public:
 
         return true;
     }
+
+    static int GetHighest(vector<int> cards){
+        int highest = cards[0];
+        for(auto i : cards)
+            if(i > highest) highest = i;
+        return highest;
+    }
 };
 #endif //POKERAI_UTILS_H

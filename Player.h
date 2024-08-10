@@ -13,7 +13,7 @@ using namespace std;
 class Player{
 public:
     int id;
-    int wallet;
+    int wallet = 100;
     float strength;
     pair<Card, Card> cards;
     StrengthEvaluator evaluator;
@@ -36,6 +36,7 @@ public:
         allCards.push_back(cards.first);
         allCards.push_back(cards.second);
         Utils::SortCards(allCards);
+        evaluator.EvaluateHighCard(allCards);
         evaluator.EvaluatePair(allCards);
         evaluator.EvaluateTuple(allCards);
         evaluator.EvaluateStraight(allCards);
@@ -44,7 +45,7 @@ public:
         evaluator.EvaluateFourOfAKind(allCards);
         evaluator.EvaluateStraightFlush(allCards);
         evaluator.EvaluateRoyalFlush(allCards);
-        //evaluator.PrintHands(id);
+        strength = evaluator.GetHandStrength();
     }
 };
 #endif //POKERAI_PLAYER_H
