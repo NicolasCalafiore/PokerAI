@@ -3,7 +3,7 @@
 //
 #include <iostream>
 #include <string>
-#include "Game.h"
+#include "../src/Game.h"
 #include <map>
 
 #ifndef POKERAI_OUTPUTINTERFACE_H

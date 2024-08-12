@@ -4,8 +4,9 @@
 
 #ifndef POKERAI_UTILS_H
 #define POKERAI_UTILS_H
+
 #include <vector>
-#include "Card.h"
+#include "../src/Card.h"
 
 using namespace std;
 class Utils{
@@ -19,7 +20,6 @@ public:
                         cards[i] = cards[j];
                         cards[j] = temp;
                     }
-
     }
 
     static bool IsSorted(vector<Card> cards){
@@ -36,5 +36,15 @@ public:
             if(i > highest) highest = i;
         return highest;
     }
+
+    static vector<Card> combine(vector<Card> a, vector<Card> b){
+        vector<Card> c;
+        for(auto i : a)
+            c.push_back(i);
+        for(auto i : b)
+            c.push_back(i);
+        return c;
+    }
+
 };
 #endif //POKERAI_UTILS_H

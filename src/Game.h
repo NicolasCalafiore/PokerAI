@@ -5,7 +5,7 @@
 #ifndef POKERAI_GAME_H
 #define POKERAI_GAME_H
 
-#include "Player.h"
+#include "../Player/Player.h"
 #include <random>
 
 using namespace std;
@@ -16,7 +16,6 @@ public:
     vector<Card> communityCards;
 
     Game(int numPlayers){
-
         for(int i = 0; i < numPlayers; i++)
             players.push_back(new Player(i));
     };
@@ -27,8 +26,6 @@ public:
     }
 
     void AddFlop(){
-        uniform_int_distribution<> distr(0, 13);
-        mt19937 gen(rd());
         communityCards.clear();
         for(int i = 0; i < 3; i++)
             communityCards.push_back(Card());
@@ -41,7 +38,8 @@ public:
     }
 
     void AddTurnCard(){
-        communityCards.push_back(Card());
+        if(communityCards.size() < 5)
+            communityCards.push_back(Card());
     }
 
 

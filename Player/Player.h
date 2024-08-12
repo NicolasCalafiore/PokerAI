@@ -2,8 +2,8 @@
 // Created by Administrator on 8/9/2024.
 //
 #include<vector>
-#include "Utils.h"
-#include "Card.h"
+#include "../Utils/Utils.h"
+#include "../src/Card.h"
 #include "StrengthEvaluator.h"
 
 #ifndef POKERAI_PLAYER_H
@@ -17,6 +17,7 @@ public:
     float strength;
     pair<Card, Card> cards;
     StrengthEvaluator evaluator;
+
     Player(int id){
         this->id = id;
     }
@@ -26,16 +27,15 @@ public:
         this->cards.second = Card();
     }
 
-    void PrintCards(){
-        cout << "Player: " << id << endl;
-        cout << "Cards: " << cards.first.value << ", " << cards.second.value << endl;
-    }
 
     void CalculateStrength(vector<Card> pot){
-        vector<Card> allCards = pot;
-        allCards.push_back(cards.first);
-        allCards.push_back(cards.second);
+        vector<Card> allCards = Utils::combine(pot, {cards.first, cards.second});
         Utils::SortCards(allCards);
+        StartEvaluation(allCards);
+        strength = evaluator.GetHandStrength();
+    }
+
+    void StartEvaluation(vector<Card> allCards){
         evaluator.EvaluateHighCard(allCards);
         evaluator.EvaluatePair(allCards);
         evaluator.EvaluateTuple(allCards);
@@ -45,7 +45,10 @@ public:
         evaluator.EvaluateFourOfAKind(allCards);
         evaluator.EvaluateStraightFlush(allCards);
         evaluator.EvaluateRoyalFlush(allCards);
-        strength = evaluator.GetHandStrength();
+    }
+
+    void CalculateBet(){
+
     }
 };
 #endif //POKERAI_PLAYER_H

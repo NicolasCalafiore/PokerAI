@@ -5,7 +5,7 @@
 #ifndef POKERAI_STRENGTHEVALUATOR_H
 #define POKERAI_STRENGTHEVALUATOR_H
 #include <tuple>
-#include "Card.h"
+#include "../src/Card.h"
 #include <set>
 #include <iostream>
 #include <map>
@@ -24,34 +24,38 @@ public:
     bool royalFlush = false;
 
     StrengthEvaluator(){
-
+        highCard = 0;
+        pair = {false, {}};
+        threeOfAKind = {false, {}};
+        straight = {false, {}};
+        flush = {false, 0};
+        fullHouse = {false, 0};
+        fourOfAKind = {false, 0};
+        straightFlush = {false, 0};
     }
+
     void EvaluateHighCard(vector<Card> cards){
         highCard = cards[cards.size() - 1].value;
     }
-    void EvaluatePair(vector<Card> cards){
-        for(int i = 0; i < cards.size(); i++){
-            for(int j = 0; j < cards.size(); j++){
-                if(cards[i].value == cards[j].value && i != j){
-                    pair.first = true;
-                    pair.second.push_back(cards[i].value);
-                }
+
+    void EvaluatePair(vector<Card> cards) {
+        for (int i = 1; i < cards.size(); i++)
+            if (cards[i].value == cards[i - 1].value) {
+                pair.first = true;
+                pair.second.push_back(cards[i].value);
+                i++;
             }
-        }
     }
 
-    void EvaluateTuple(vector<Card> cards){
-        for(int i = 0; i < cards.size(); i++){
-            for(int j = 0; j < cards.size(); j++){
-                for(int k = 0; k < cards.size(); k++){
-                    if(cards[i].value == cards[j].value && cards[j].value == cards[k].value && i != j && j != k && i != k){
-                        threeOfAKind.first = true;
-                        threeOfAKind.second.push_back(cards[i].value);
-                    }
-                }
+    void EvaluateTuple(vector<Card> cards) {
+        for (int i = 2; i < cards.size(); i++)
+            if (cards[i].value == cards[i - 1].value && cards[i - 1].value == cards[i - 2].value) {
+                threeOfAKind.first = true;
+                threeOfAKind.second.push_back(cards[i].value);
+                i += 2;
             }
-        }
     }
+
 
     void EvaluateStraight(vector<Card> cards) {
         int counter = 1;  // Start counting from the first card
@@ -78,20 +82,15 @@ public:
         straight.second.clear();
     }
 
-    void EvaluateFullHouse(vector<Card> cards){
-        int highest = 0;
-
-        if(pair.first && threeOfAKind.first)
-            if(pair.second != threeOfAKind.second) {
-                fullHouse.first = true;
-                for(auto i : threeOfAKind.second)
-                    if(i > highest) highest = i;
-                for(auto i : pair.second)
-                    if(i > highest) highest = i;
-            }
-
-        fullHouse.first = false;
+    void EvaluateFullHouse(vector<Card> cards) {
+        if (threeOfAKind.first && pair.first && threeOfAKind.second != pair.second) {
+            fullHouse.first = true;
+            fullHouse.second = max(threeOfAKind.second[0], pair.second[0]);
+        }
+        else
+            fullHouse.first = false;
     }
+
 
     void EvaluateFlush(vector<Card> cards){
         int counter = 0;
@@ -103,29 +102,18 @@ public:
         flush.second = highCard;
     }
 
-    void EvaluateFourOfAKind(vector<Card> cards){ // REFACTOR (CARDS ARE IN ORDER)
-        int targetSuite;
-        int highestCard = 0;
-        for(int i = 0; i < cards.size(); i++){
-            for(int j = 0; j < cards.size(); j++){
-                for(int k = 0; k < cards.size(); k++){
-                    for(int l = 0; l < cards.size(); l++){
-                        if(cards[i].value == cards[j].value && cards[j].value == cards[k].value && cards[k].value == cards[l].value && i != j && j != k && i != k && i != l && j != l && k != l){
-                            fourOfAKind.first = true;
-                            targetSuite = cards[i].suite;
-
-                            for(auto i : cards)
-                                if(i.suite == targetSuite)
-                                    if(i.value > highestCard)
-                                        highestCard = i.value;
-                            fourOfAKind.second = highestCard;
-                        }
-                    }
-                }
+    void EvaluateFourOfAKind(vector<Card> cards) {
+        for (int i = 3; i < cards.size(); i++) {
+            if (cards[i].value == cards[i - 1].value && cards[i - 1].value == cards[i - 2].value && cards[i - 2].value == cards[i - 3].value) {
+                fourOfAKind.first = true;
+                fourOfAKind.second = cards[i].value;
+                return;
             }
         }
-
+        fourOfAKind.first = false;
+        fourOfAKind.second = 0;
     }
+
 
     void EvaluateStraightFlush(vector<Card> cards){
         int highestCard = 0;
